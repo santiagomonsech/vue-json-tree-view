@@ -1,5 +1,7 @@
 <template>
   <div class="tree-view-wrapper">
+    <input v-if="this.enableFilter" placeholder="Search element" v-model="filter">
+    <button v-if="this.collapse" type="button" class="btn" @click="collapseAll">Collapse All</button>
     <tree-view-item class="tree-view-item-root" :data="parsedData" :max-depth="allOptions.maxDepth" :current-depth="0" :modifiable="allOptions.modifiable" @change-data="onChangeData"></tree-view-item>
   </div>
 </template>
@@ -13,52 +15,59 @@
       TreeViewItem
     },
   	name: "tree-view",
-    props: ["data", "options"],
+    props: ["data", "options", "collapse", "enableFilter"],
+    data(){
+      return {
+        filter: ''
+      }
+    },
     methods: {
 
     	// Transformer for the non-Collection types,
       // like String, Integer of Float
-      transformValue: function(valueToTransform, keyForValue){
+      transformValue: function(valueToTransform, keyForValue, filter_string){
       	return {
         	key: keyForValue,
           type: "value",
-          value: valueToTransform
+          value: valueToTransform,
+          filter: filter_string
         }
       },
 
     	// Since we use lodash, the _.map method will work on
       // both Objects and Arrays, returning either the Key as
       // a string or the Index as an integer
-    	generateChildrenFromCollection: function(collection){
+    	generateChildrenFromCollection: function(collection, filter_string){
   			return _.map(collection, (value, keyOrIndex)=>{
             if (this.isObject(value)) {
-              return this.transformObject(value, keyOrIndex);
+              return this.transformObject(value, keyOrIndex, false, filter_string);
             }
             if (this.isArray(value)) {
-              return this.transformArray(value, keyOrIndex);
+              return this.transformArray(value, keyOrIndex, filter_string);
             }
             if (this.isValue(value)) {
-              return this.transformValue(value, keyOrIndex);
+              return this.transformValue(value, keyOrIndex, filter_string);
             }
           }) ;
       },
 
     	// Transformer for the Array type
-      transformArray: function(arrayToTransform, keyForArray){
+      transformArray: function(arrayToTransform, keyForArray, filter_string){
       	return {
         	key: keyForArray,
           type: "array",
-          children: this.generateChildrenFromCollection(arrayToTransform)
+          children: this.generateChildrenFromCollection(arrayToTransform, filter_string)
         }
       },
 
       // Transformer for the Object type
-    	transformObject: function(objectToTransform, keyForObject, isRootObject = false){
+    	transformObject: function(objectToTransform, keyForObject, isRootObject = false, filter_string=''){
         return {
         	key: keyForObject,
         	type: "object",
           isRoot: isRootObject,
-          children: this.generateChildrenFromCollection(objectToTransform)
+          children: this.generateChildrenFromCollection(objectToTransform, filter_string),
+          filter: filter_string
         }
       },
 
@@ -78,18 +87,24 @@
       onChangeData: function(path, value) {
         let lastKey = _.last(path)
         path = _.dropRight(_.drop(path))
-        
+
         let data = _.cloneDeep(this.data)
         let targetObject = data
         _.forEach(path, (key) => {
           targetObject = targetObject[key]
         })
-        
+
         if (targetObject[lastKey] != value) {
           targetObject[lastKey] = value
           this.$emit('change-data', data)
         }
       },
+      collapseAll: function(){
+        _.map(this.$children, child => {
+          child.open = false;
+          child.collapseAll();
+        });
+      }
     },
     computed: {
       allOptions: function(){
@@ -106,11 +121,11 @@
         // Strings or Integers should not be attempted to be split, so we generate
         // a new object with the string/number as the value
         if (this.isValue(this.data)) {
-          return this.transformValue(this.data, this.allOptions.rootObjectKey);
+          return this.transformValue(this.data, this.allOptions.rootObjectKey, this.filter);
         }
 
         // If it's an object or an array, transform as an object
-  	    return this.transformObject(this.data, this.allOptions.rootObjectKey, true);
+  	    return this.transformObject(this.data, this.allOptions.rootObjectKey, true, this.filter);
       }
     }
   };

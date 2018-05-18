@@ -28,7 +28,7 @@
                 <pre><code>{{sampleJSONString}}</code></pre>
               </div>
               <div class="col-sm-6">
-                <tree-view :data="sampleJSONString" :options="{maxDepth: 2, rootObjectKey: 'The Test String'}"></tree-view>
+                <tree-view :data="sampleJSONString" :options="{maxDepth: 2, rootObjectKey: 'The Test String'}" :collapse="true" :enable-filter="true"></tree-view>
               </div>
             </div>
             <div class="row">
@@ -37,7 +37,7 @@
                 <pre><code>{{sampleJSONArray}}</code></pre>
               </div>
               <div class="col-sm-6">
-                <tree-view :data="sampleJSONArray" :options="{maxDepth: 2, rootObjectKey: 'The Test Array'}"></tree-view>
+                <tree-view :data="sampleJSONArray" :options="{maxDepth: 2, rootObjectKey: 'The Test Array'}" :collapse="true" :enable-filter="true"></tree-view>
               </div>
             </div>
 
@@ -47,7 +47,7 @@
                 <pre><code>{{sampleJSON}}</code></pre>
               </div>
               <div class="col-sm-6">
-                <tree-view :data="sampleJSON" :options="{maxDepth: 0, rootObjectKey: 'The named Object'}"></tree-view>
+                <tree-view :data="sampleJSON" :options="{maxDepth: 0, rootObjectKey: 'The named Object'}" :collapse="true" :enable-filter="true"></tree-view>
               </div>
             </div>
 
@@ -57,7 +57,7 @@
                 <pre><code>{{sampleJSON}}</code></pre>
               </div>
               <div class="col-sm-6">
-                <tree-view :data="sampleJSON" :options="{maxDepth: 2}"></tree-view>
+                <tree-view :data="sampleJSON" :options="{maxDepth: 2}" :collapse="true" :enable-filter="true" ></tree-view>
               </div>
             </div>
 
@@ -67,7 +67,7 @@
                 <pre><code>{{sampleJSON}}</code></pre>
               </div>
               <div class="col-sm-6">
-                <tree-view :data="sampleJSON" :options="{modifiable: true}" v-on:change-data="onChangeData" ></tree-view>
+                <tree-view :data="sampleJSON" :options="{modifiable: true}" v-on:change-data="onChangeData" :collapse="true" :enable-filter="true"></tree-view>
               </div>
             </div>
         </div>

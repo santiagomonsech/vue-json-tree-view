@@ -1,12 +1,12 @@
 <template>
   <div class="tree-view-item">
-    <div v-if="isObject(data)" class="tree-view-item-leaf">
-      <div class="tree-view-item-node" @click.stop="toggleOpen()" >
+    <div v-if="isObject(data)" class="tree-view-item-leaf" >
+      <div class="tree-view-item-node" @click.stop="toggleOpen()">
         <span :class="{opened: isOpen()}" class="tree-view-item-key tree-view-item-key-with-chevron">{{getKey(data)}}</span>
         <span class="tree-view-item-hint" v-show="!isOpen() && data.children.length === 1">{{data.children.length}} property</span>
         <span class="tree-view-item-hint" v-show="!isOpen() && data.children.length !== 1">{{data.children.length}} properties</span>
       </div>
-      <tree-view-item :key="getKey(child)" :max-depth="maxDepth" :current-depth="currentDepth+1" v-show="isOpen()" v-for="child in data.children" :data="child" :modifiable="modifiable" @change-data="onChangeData"></tree-view-item>
+      <tree-view-item :key="getKey(child)" :max-depth="maxDepth" :current-depth="currentDepth+1" v-show="isOpen()" v-for="child in data.children" :data="child" :modifiable="modifiable" @change-data="onChangeData" @searchOpen="SearchOpen()"></tree-view-item>
     </div>
     <div v-if="isArray(data)" class="tree-view-item-leaf">
       <div class="tree-view-item-node" @click.stop="toggleOpen()">
@@ -14,7 +14,7 @@
         <span class="tree-view-item-hint" v-show="!isOpen() && data.children.length === 1">{{data.children.length}} item</span>
         <span class="tree-view-item-hint" v-show="!isOpen() && data.children.length !== 1">{{data.children.length}} items</span>
       </div>
-      <tree-view-item :key="getKey(child)" :max-depth="maxDepth" :current-depth="currentDepth+1" v-show="isOpen()" v-for="child in data.children" :data="child" :modifiable="modifiable" @change-data="onChangeData"></tree-view-item>
+      <tree-view-item :key="getKey(child)" :max-depth="maxDepth" :current-depth="currentDepth+1" v-show="isOpen()" v-for="child in data.children" :data="child" :modifiable="modifiable" @change-data="onChangeData" @searchOpen="SearchOpen()"></tree-view-item>
     </div>
     <tree-view-item-value v-if="isValue(data)" class="tree-view-item-leaf" :key-string="getKey(data)" :data="data.value" :modifiable="modifiable" @change-data="onChangeData">
     </tree-view-item-value>
@@ -36,12 +36,21 @@
       	open: this.currentDepth < this.maxDepth
       }
     },
+    computed:{
+      filter(){
+        return this.data.filter || '';
+      }
+    },
     methods: {
       isOpen: function(){
       	return this.open;
       },
-      toggleOpen:function(){
+      toggleOpen: function(){
       	this.open = !this.open;
+      },
+      SearchOpen: function(){
+        this.open = true;
+        this.$emit('searchOpen');
       },
     	isObject: function(value){
       	return value.type === 'object';
@@ -65,8 +74,32 @@
       onChangeData: function(path, value) {
         path = _.concat(this.data.key, path)
         this.$emit('change-data', path, value)
+      },
+      collapseAll: function(){
+        _.map(this.$children, child => {
+          if(child.hasOwnProperty("open")){
+            child.collapseAll();
+            child.open = false;
+          }
+        });
+        this.open = false;
       }
-    }
+    },
+    watch: {
+      filter(){
+          const filter_values = this.filter.split(":");
+          if(!filter_values[1]) return;
+          if((this.data.type == 'value') && (filter_values[1].length > 1)){
+            let display = false;
+            if(filter_values[0].length > 1){
+              display |= ((String(this.data.key).toLowerCase() == filter_values[0].toLowerCase()) && (_.includes(String(this.data.value).toLowerCase(), filter_values[1].toLowerCase())));
+            }else{
+             display |=  _.includes(String(this.data.value).toLowerCase(), filter_values[1].toLowerCase());
+            }
+            if(display) this.$emit('searchOpen');
+          }
+        }
+      }
   };
 </script>
 
